@@ -1,0 +1,57 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1) Checkout code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2) Setup Node.js (for tests before build)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      # 3) Install deps & run tests
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests
+        run: npm test
+
+      # 4) Configure AWS
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # 5) Login to Amazon ECR
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 6) Build, tag & push image to ECR
+      - name: Build, tag, and push image
+        run: |
+          IMAGE_TAG=latest
+          ECR_URI=${{ steps.ecr-login.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:$IMAGE_TAG
+          docker build -t $ECR_URI .
+          docker push $ECR_URI
+          echo "image=$ECR_URI" >> $GITHUB_ENV
+
+      # 7) Deploy to ECS
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ecs-task-def.json
+          service: ${{ secrets.ECS_SERVICE }}
+          cluster: ${{ secrets.ECS_CLUSTER }}
+          wait-for-service-stability: true
