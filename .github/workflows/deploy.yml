@@ -5,9 +5,12 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-test-push:
+  build-and-deploy:
     runs-on: ubuntu-latest
-
+    
+    # You must specify the EC2 host and SSH key here for the job to use them.
+    # The aws-access-key-id, aws-secret-access-key, and aws-region are provided
+    # to the aws-actions/configure-aws-credentials action.
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,30 +25,28 @@ jobs:
           npm install
           npm test
 
-      - name: Configure AWS
+      - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: me-south-1
+          aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Login to Amazon ECR
         id: ecr-login
         uses: aws-actions/amazon-ecr-login@v2
-
+        
       - name: Build and push image to ECR
         run: |
           IMAGE_TAG=latest
+          # The registry output from ecr-login is scoped to this job.
           ECR_URI=${{ steps.ecr-login.outputs.registry }}/github-actions-ec2:$IMAGE_TAG
           docker build -t $ECR_URI .
           docker push $ECR_URI
-          echo "image=$ECR_URI" >> $GITHUB_ENV
+          
+          # The image URI is now an environment variable for the remainder of this job.
+          echo "IMAGE_URI=$ECR_URI" >> $GITHUB_ENV
 
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build-test-push
-
-    steps:
       - name: SSH into EC2 and deploy
         uses: appleboy/ssh-action@v1.1.0
         with:
@@ -53,7 +54,8 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker pull ${{ env.image }}
+            # Use the environment variable set in the previous step.
+            docker pull ${{ env.IMAGE_URI }}
             docker stop api || true
             docker rm api || true
-            docker run -d -p 80:3000 --name api ${{ env.image }}
+            docker run -d -p 80:3000 --name api ${{ env.IMAGE_URI }}
