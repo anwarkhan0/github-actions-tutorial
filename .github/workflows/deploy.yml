@@ -22,6 +22,30 @@ jobs:
         run: |
           npm install
           npm test
+      
+      - name: Debug AWS Region Secret
+      run: |
+        # Check if the secret is non-empty. This will NOT log the secret's value.
+        if [ -z "${{ secrets.AWS_REGION }}" ]; then
+          echo "::error::Secret AWS_REGION is empty or not found. Check repository/environment secrets."
+          exit 1
+        else
+          # Since the secret is not empty, it will resolve to a masked string (e.g., '***') in the logs.
+          echo "AWS_REGION is set and ready to use."
+        fi
+      shell: bash
+
+    - name: Debug AWS Access Key ID Secret
+      run: |
+        # Check if the Access Key ID secret is non-empty. This confirms it is accessible.
+        if [ -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
+          echo "::error::Secret AWS_ACCESS_KEY_ID is empty or not found. This credential is required."
+          exit 1
+        else
+          echo "AWS_ACCESS_KEY_ID is set and ready to use."
+        fi
+      shell: bash
+
 
 
       - name: Configure AWS
