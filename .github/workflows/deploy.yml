@@ -9,6 +9,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Debug Variables (DO NOT PRINT SECRETS)
+        run: |
+          echo "AWS Region set to: ${{ secrets.AWS_REGION }}"
+          echo "ECR Registry output: ${{ steps.ecr-login.outputs.registry }}"
+          echo "Image URI set in ENV: ${{ env.IMAGE_URI }}"
+
       - name: Checkout
         uses: actions/checkout@v4
 
