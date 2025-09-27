@@ -23,8 +23,11 @@ jobs:
           npm install
           npm test
 
+
       - name: Debug region secret
-        run: echo "Region is ${{ secrets.AWS_ACCESS_KEY_ID }}"
+        run: |
+          echo "Region is ${{ secrets.AWS_ACCESS_KEY_ID }}"
+          echo "Region is ${{ secrets.AWS_REGION }}"
 
 
       - name: Configure AWS
