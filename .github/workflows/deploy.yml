@@ -44,7 +44,7 @@ jobs:
       - name: Build and push image to ECR
         run: |
           IMAGE_TAG=latest
-          ECR_URI=${{ steps.ecr-login.outputs.registry }}/github-actions-ec2:$IMAGE_TAG
+          ECR_URI=${{ steps.ecr-login.outputs.registry }}/github-actions-api:$IMAGE_TAG
           docker build -t $ECR_URI .
           docker push $ECR_URI
           echo "image=$ECR_URI" >> $GITHUB_ENV
