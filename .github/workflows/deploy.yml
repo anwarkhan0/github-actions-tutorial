@@ -55,22 +55,21 @@ jobs:
 
 
   deploy:
-    runs-on: amazon-linux
+    runs-on: ubuntu-latest   # ✅ use GitHub runner, not amazon-linux
     needs: build-test-push
 
     steps:
       - name: SSH into EC2 and deploy
-      uses: appleboy/ssh-action@v1.1.0
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ec2-user
-        key: ${{ secrets.EC2_SSH_KEY }}
-        script: |
-          aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
-          | docker login --username AWS --password-stdin 104974779468.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
+              | docker login --username AWS --password-stdin 104974779468.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
-          docker pull ${{ env.image }}
-          docker stop api || true
-          docker rm api || true
-          docker run -d -p 80:3000 --name api ${{ env.image }}
-
+            docker pull ${{ env.image }}
+            docker stop api || true
+            docker rm api || true
+            docker run -d -p 80:3000 --name api ${{ env.image }}
