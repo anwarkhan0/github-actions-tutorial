@@ -67,7 +67,7 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
-            | docker login --username AWS --password-stdin 104974779468.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+          | docker login --username AWS --password-stdin 104974779468.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
           docker pull ${{ env.image }}
           docker stop api || true
