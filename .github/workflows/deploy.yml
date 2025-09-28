@@ -26,10 +26,7 @@ jobs:
 
       - name: Debug region secret
         run: |
-          echo "Region is ${{ secrets.AWS_ACCESS_KEY_ID }}"
           echo "Region is ${{ secrets.AWS_REGION }}"
-          run: ping -c 4 ${{ secrets.EC2_HOST }}
-
 
 
       - name: Configure AWS
