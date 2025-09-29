@@ -68,7 +68,8 @@ jobs:
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
               | docker login --username AWS --password-stdin 104974779468.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
-            docker pull ${{ env.image }}
+            docker pull 104974779468.dkr.ecr.me-south-1.amazonaws.com/github-actions/actions-api:latest
             docker stop api || true
             docker rm api || true
-            docker run -d -p 80:3000 --name api ${{ env.image }}
+            docker run -d -p 80:3000 --name api 104974779468.dkr.ecr.me-south-1.amazonaws.com/github-actions/actions-api:latest
+
