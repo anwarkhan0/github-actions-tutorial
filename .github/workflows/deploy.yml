@@ -1,7 +1,5 @@
 name: CI/CD to EC2
 
-env:
-  IMAGE: 104974779468.dkr.ecr.me-south-1.amazonaws.com/github-actions/actions-api:latest
 on:
   push:
     branches: [ "main" ]
@@ -48,11 +46,11 @@ jobs:
 
       - name: Tag Docker image
         run: |
-          docker tag github-actions/actions-api:latest $IMAGE
+          docker tag github-actions/actions-api:latest 104974779468.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/github-actions/actions-api:latest
 
       - name: Push to ECR
         run: |
-          docker push $IMAGE
+          docker push 104974779468.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/github-actions/actions-api:latest
 
 
   deploy:
@@ -66,13 +64,12 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: IMAGE=${{ env.IMAGE }}
           script: |
             aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
               | docker login --username AWS --password-stdin 104974779468.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
-            docker pull $IMAGE
+            docker pull 104974779468.dkr.ecr.me-south-1.amazonaws.com/github-actions/actions-api:latest
             docker stop api || true
             docker rm api || true
-            docker run -d -p 80:3000 --name api $IMAGE
+            docker run -d -p 80:3000 --name api 104974779468.dkr.ecr.me-south-1.amazonaws.com/github-actions/actions-api:latest
 
